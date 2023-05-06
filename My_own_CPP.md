@@ -266,9 +266,18 @@ int *pi5 = new int{42}; // 同上，但是更 modern
   - 如果是nullptr，首先不会调用析构函数，其次释放内存是implementation defined(如果调用了，保证什么事情都不做)
 
 ---
+# Move 移动
+---
+## Motivation: copy is slow
+```cpp
+s = a + b;
+```
+1.  Evaluate `a + b` and store the result in a temporary object, say `tmp`.
+2.  Perform the assignment  `s = tmp`.
+3.  The temporary object `tmp`
+---
 # `class` 初步
 ---
-
 ## 访问限制
 
 - `private`：外部代码不能访问，只有类内和 `friend` 代码可以访问。
