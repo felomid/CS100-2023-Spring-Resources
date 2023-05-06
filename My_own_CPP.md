@@ -275,6 +275,124 @@ s = a + b;
 1.  Evaluate `a + b` and store the result in a temporary object, say `tmp`.
 2.  Perform the assignment  `s = tmp`.
 3.  The temporary object `tmp`
+
+Can we make this faster ?
+- The assignment `s = tmp` is done by **copying** the contents of `tmp`.
+- But `tmp` is about to die! Why can't we just *steal* contents from it? 
+
+---
+## Distinguish between the different kinds of assignments
+<div style="display: grid; grid-template-columns: 1fr 1fr;">
+  <div>
+  
+  ```cpp
+  s = a;
+  ```
+  </div>
+  <div>
+
+  ```cpp
+  s = a + b;
+  ```
+  </div>
+</div>
+
+What is the key difference between them?
+- `s = a` is an assignment from an **lvalue**,
+- while `s = a + b` is an assignment from an **rvalue**.
+
+If we only have the copy assignment operator, there is no way we can distinguish them.
+
+\* **Define two different assignment operators, one accepting an lvalue and the other accepting an rvalue?**
+
+---
+
+# `std::move`
+
+---
+## `std::move`
+Defined in `<utility>`
+`std::move(x)` performs and **lvalue to rvalue cast**:
+```cpp
+int ival = 42;
+int &&rref = ival; // Error
+int &&rref2 = std::move(ival); // Correct
+```
+Calling `std::move(x)` tells the compiler that:
+- `x` is an lvalue, but
+- we want to treat `x` as an **rvalue**.
+
+---
+## `std::move``
+`std::move(x)` indicates that we want to treat `x` as an **rvalue**, which means that `x` will be *moved from*.
+
+The call to `std::move` **promises** that we do not intend to use `x` again,
+- except to assign to it or to destroy it.
+
+After a call to `std::move`, **we cannot make any assumptions about the value of the moved-from object.**
+
+"`std::move` does not *move* anything. It just makes a *promise*"
+
+---
+# NRVO, Move and Copy Elision
+
+---
+## Returning a Temporary(pure rvalue)
+```cpp
+std::string foo(const std::string &a, const std::string &b) {
+  return a + b; // a temporary
+}
+std::string s = foo(a, b);
+```
+- First, a temporary is generated to store the result of `a + b`.
+- How is this temporary returned?
+
+Since C++17, **no copy or move** is made here. The initialization of `s` is the same as
+```cpp
+std::string s(a + b);
+```
+
+This is called **copy elision**.
+
+---
+## Returning a Named Object
+```cpp
+Dynarray concat(const Dynarray &a, const Dynarray &b) {
+  Dynarray result(a.size() + b.size());
+  for (std::size_t i = 0; i != a.size(); ++i)    
+    result.at(i) = a.at(i);
+  for (std::size_t i = 0; i != b.size(); ++i)    
+    result.at(a.size() + i) = b.at(i);
+  return result;
+}
+a = concat(b, c);
+```
+- `result` is a local object of `concat`.
+- Since C++11, `return result` performs a **move initialization** of a temporary object, say `tmp`.
+- Then a **move assignment** to `a` is performed
+---
+## Named Return Value Optimization, NRVO 命名返回值优化
+```cpp
+Dynarray concat(const Dynarray &a, const Dynarray &b) {
+  Dynarray result(a.size() + b.size());// ...
+  return result;
+}
+Dynarray a = concat(b, c); // Initialization
+```
+
+NRVO transforms this code to
+```cpp
+// Pseudo C++ code.
+void concat(Dynarray &result, const Dynarray &a, const Dynarray &b) {
+  // Pseudo C++ code. For demonstration only.  
+  result.Dynarray::Dynarray(a.size() + b.size()); // construct in-place
+  // ...
+}
+  Dynarray a@; // Uninitialized.
+  concat(a@, b, c);
+```
+so that no copy or move is needed.
+
 ---
 # `class` 初步
 ---
@@ -809,6 +927,19 @@ int main() {
 </div>
 
 个人不推荐将 `friend` 函数定义在类内，除了一个和模板有关的特殊情况（以后再说）
+
+---
+# Smart Pointers
+
+---
+## Smart Pointers
+`<memory>` provides two types of smart pointers:
+- `std::unique_ptr<T>`, which uniquely **owns** an object of type `T`.
+  - No other smart pointer pointing to the same object is allowed.
+  - Disposes of the object(calls its destructor) once this `unique_ptr` gets destroyed or assigned a new value.
+- `std::shared_ptr<T>`, which **shares** ownership of an object of type `T`.
+  - Multiple `shared_ptr`s pointing to a same object is allowed.
+  - Disposes of the object (calls its destructor) when the last `shared_ptr` pointing to that object gets destroyed or assigned a new value.
 
 ---
 ## 参数转发
