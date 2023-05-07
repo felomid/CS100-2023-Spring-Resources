@@ -942,6 +942,63 @@ int main() {
   - Disposes of the object (calls its destructor) when the last `shared_ptr` pointing to that object gets destroyed or assigned a new value.
 
 ---
+## Creating an `std::unique_ptr`
+Use `std::unique_ptr` to create an object in dynamic memory,
+- if no other pointer to this object is needed
+
+Tow ways of creating an `std::unique_ptr`：
+- passing a pointer created by `new` in the constructor.
+```cpp
+std::unique_ptr<Student> p(new Student("Bob", 2020123123));
+```
+
+- use `std::make_unique<T>`, pass initializers to it:
+```cpp
+std::unique_ptr<Student> p1 = std::make_unique<Student>("Bob", 2020123123);
+auto p2 = std::make_unique<Student>("Alice", 2020321321);
+```
+
+Using `auto` here does not reduce readability, because `std::make_unique<Student>` clearly hints the type.
+---
+## `std::unique_ptr`: Automatic Memory Management
+
+An `std::unique_ptr` automatically calls the destructor once it gets destroyed or assigned a new value.
+
+- No manual `delete` needed!
+---
+## `std::unique_ptr`: Move-only
+```cpp
+auto p = std::make_unique<std::string>("Hello");
+std::cout << *p << std::endl; // Prints "Hello".
+std::unique_ptr<std::string> q = p; // Error, copy is not allowed.
+std::unique_ptr<std::string> r = std::move(p); // Correct.
+// The ownership of this std::string is transferred to r.
+std::cout << *r << std::endl; // Prints "Hello".
+assert(!p); // p is now invalid
+```
+An `std::unique_ptr` cannot be copied, but only moved.
+- Remember, only one `std::unique_ptr can own the managed object.
+- A move operation transfers its ownership.
+---
+## Move assignment
+`std::unique_ptr is only move-assignable, not copy-assignable.
+```cpp
+std::unique_ptr<T> p = some_value(), q = some_other_value();
+p = q; // Error
+p = std::move(q); // OK.
+```
+The assignment `p = std::move(q)` does the following:
+- `p` releases the object it used to manage. Destructor is called and memory is deallocated.
+- Then, the object that `q` manages is transferred to `p`. `q` no longer owns an object.
+---
+## `unique_ptr` for array type
+
+A *template specialization*: `std::unique_ptr<T[]>
+- Specially designed to represent pointers that point ot a "dynamic array" of objects.
+- Has some array-specific operators, e.g. `operator[]`.
+- Does not support `operator*` and `operator->`.
+- Uses `delete[]` instead of `delete`.
+---
 ## 参数转发
 
 回顾 `std::make_shared` 和 `std::make_unique`：
