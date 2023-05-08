@@ -959,6 +959,7 @@ auto p2 = std::make_unique<Student>("Alice", 2020321321);
 ```
 
 Using `auto` here does not reduce readability, because `std::make_unique<Student>` clearly hints the type.
+
 ---
 ## `std::unique_ptr`: Automatic Memory Management
 
@@ -998,6 +999,64 @@ A *template specialization*: `std::unique_ptr<T[]>
 - Has some array-specific operators, e.g. `operator[]`.
 - Does not support `operator*` and `operator->`.
 - Uses `delete[]` instead of `delete`.
+---
+# `shared pointer`
+---
+## Idea: Reference counting
+```cpp
+class CountedObject {
+  Object the_object;
+  int ref_cnt = 1;
+};
+
+class SharedPtr {
+  CountedObject *m_ptr;
+ public:
+  SharedPtr(const SharedPtr &other)
+    ：m_ptr(other.m_ptr) { ++m_ptr->ref_cnt; }
+  SharedPtr &operator=(const SharedPtr &other) {// Pay attention to self-assignment safe!!!!
+    ++other.m_ptr->ref_cnt;
+    if(--m_ptr->ref_cnt == 0)
+      delete m_ptr;
+    m_ptr = other.m_ptr;
+    return *this;
+  }
+  ~SharedPtr() {
+    if(--m_ptr->ref_cnt == 0)
+      delete m_ptr;
+  }
+};
+```
+---
+## Create a `shared_ptr`
+
+For `std::shared_ptr`, **`std::make_shared`** is preferable to directly using `new`
+```cpp
+auto sp = std::make_shared<Type>(args); //preferable
+std::shared_ptr<Type> sp2(new Type(args)); // Ok, but less preferred
+```
+Read *Effective Modern C++* Item 21.
+
+---
+## Operations
+
+`*` and `->` can be used as if it is a raw pointer.
+
+`sp.use_count()`: The value of the reference counter.
+
+```cpp
+auto sp = std::make_shared<std::string>(10, 'c');
+{
+  auto sp2 = sp;
+  std::cout << sp.use_count() << std::endl; //2
+}//sp2 is destroyed
+std::cout << sp.use_count() << std::endl; //1
+```
+
+Notes:
+- Both of the two smart pointers support `.get()`, which returns a raw pointer to the managed object.
+  - This is useful when some old interfaces only accept raw pointers, e.g. `glfwSwapBuffers`.
+- **Don't** delete the raw pointer you get from `.get()` !!!!
 ---
 ## 参数转发
 
@@ -1124,6 +1183,16 @@ words.emplace_back(10, 'c');
 # 继承 (Inheritance)、多态 (Polymorphism)
 
 ---
+## `protected` members
+
+- 除了 ctor 和 dtor **以外的所有成员**，子类都会全部继承，无论访问级别！
+
+  - 父类中的 `protected` 成员级别是 `private`, 但是它可以在子类中访问。
+
+  - 父类的 `private` 成员子类可以继承，但是子类不能直接访问！
+
+
+---
 
 
 ## 继承
@@ -1225,8 +1294,21 @@ class Derived : public Base {
 
 加上 `override` 关键字：让编译器帮你检查它是否真的构成了 override
 
+**注意：**`auto` 不能用来推测 `virtual` 函数的返回值。
+
+---
+# `virtual`-`override`
+想要去 **override**（覆盖/覆写）一个 `virtual` 函数，
+- 函数的参数列表必须和父类中的版本的参数列表一样
+- 函数的返回值和父类函数中对应函数的返回值是 **identical to or covariant with** 的.（详情可以参考Hw7文字题和*More Effective C++* Item 25，有关 `virtual` constructor 的内容）
+- **`const`ness 不能被改变**！！！
+- 相比父类中对应的函数**不能扩大**访问级别。
+
+尽管没有显式声明，但是一个 overriding 函数仍然是一个虚函数。
+`virtual` 和 `override` 都可以被省略，但是**建议一直加上他们**.
 ---
 ## 虚函数
+- 对于一个多态
 - 默认生成的（compiler-generated）的析构函数是 **non-`virtual`** 的！
   - 所以我们必须显示声明其为 `virtual` .
 - 如果父类的 dtor 是虚函数，那么子类默认生成的 dtor 也是虚函数。
