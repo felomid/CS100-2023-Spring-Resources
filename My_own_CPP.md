@@ -1263,7 +1263,7 @@ class Derived : public Base {
 合成的拷贝控制成员（不算析构）的行为？
 合成的拷贝控制成员（不算析构）：先父类，后子类自己的成员。
 
-- 如果这个过程中调用了任何不存在/不可访问的函数，则合成为 implicitly deleted
+- 如果这个过程中调用了任何不存在/不可访问的函数（比如父类的构造函数），则合成为 implicitly deleted
 
 ---
 
@@ -1454,7 +1454,7 @@ pr->draw(Shape::Red);             //调用Rectangle::draw(Shape::Red)
 - virtual 函数是动态绑定，而缺省参数值却是静态绑定。意思是说：
 - 调用一个定义于 derived class 内的 virtual函数的同时，却使用 base class 为它所指定的缺省参数值。
 ```cpp
-pc->draw( );        \\调用Rectangle::draw(Shape::Red)!
+pc->draw();        \\调用Rectangle::draw(Shape::Red)!
 ```
 调用的是 Rectangle 的 virtual函数，但是缺省参数值来自 Shape class 而非 Rectangle class。
 
@@ -1463,8 +1463,8 @@ pc->draw( );        \\调用Rectangle::draw(Shape::Red)!
 原因？
 - 可以提升编译器效率，不需要在运行时为 virtual函数决定参数值。
 
----
 
+---
 ## 纯虚函数
 
 通过将一个函数声明为 `=0`，它就是一个**纯虚函数** (pure virtual function)。
@@ -1529,9 +1529,6 @@ class Person {
   PhoneNumber faxNumber;                //同上
 }
 ```
----
-## 条款38：通过复合塑模出 has-a 或“根据某物实现出”
-
 
 ---
 ## 继承的访问权限
