@@ -2,7 +2,7 @@
 marp: true
 math: mathjax
 theme: default
-class: invert
+# class: invert
 ---
 # Recitation of C++ Part
 felomid
