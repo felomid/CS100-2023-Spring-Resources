@@ -2,7 +2,7 @@
 marp: true
 math: mathjax
 theme: default
-# class: invert
+class: invert
 ---
 # Recitation of C++ Part
 felomid
@@ -1542,3 +1542,103 @@ class C : B {};  // private inheritance
 
 - 默认的成员访问权限是 `public`/`private`。
 - 默认的继承访问权限是 `public`/`private`。
+
+---
+# 重载运算符 (Operator Overloading)
+---
+## 总结：技术
+**不能发明新的运算符。不能为内置类型定义运算符。**
+
+不能被重载：
+
+- `?:`, `.`, `::` 等，具有特别意义的运算符
+- `?:` 无法被重载，因为它有一个运算对象不被求值，这一点用函数传参不可能做到
+
+不建议被重载：（为什么？）
+
+- `&&`, `||`, `,`, `&` (一元取地址运算符)
+- `&&` 和 `||` 的短路求值会失效。`,` 和 `&` 本来就有特殊含义
+
+重载的行为需要和内置的行为保持某种程度上的一致，除非你有很好的理由不这么做
+- `++i` 返回 `i` 的引用，`i++` 返回递增前的 `i` 的一份拷贝。
+- `=` 赋值、复合赋值返回左侧运算对象的引用
+- 解引用 `*p` 通常返回左值引用
+
+---
+## 总结：技术
+
+如果需要左侧运算对象也能隐式转换，则它**不可以是成员**
+- `r == 1` 被视为 `r.operator==(1)`，即 `r.operator==(Rational(1))`
+- 但 `1 == r` 无法被视为 `1.operator==(r)`
+
+---
+## 不要漏 `const`！
+
+```cpp
+class Rational {
+ public:
+  bool operator==(const Rational &) const;
+};
+bool operator!=(const Rational &, const Rational &);
+```
+
+非成员有两个 `const`，成员也必然有两个 `const`，只是其中一个变成了这个成员函数的 qualifier。
+
+---
+
+## 特殊的运算符：后置递增 `i++`
+
+```cpp
+class Rational {
+ public:
+  Rational &operator++();
+  // 90% 的后置递增运算符都应该这样写
+  Rational operator++(int) {
+    auto tmp = *this; // 拷贝原来的对象
+    ++*this;          // 真正的“递增”由前置版本完成
+    return tmp;       // 返回递增前的拷贝
+  }
+};
+```
+
+- `int` 参数：**仅仅是为了区分前置版本和后置版本**，没有实际意义，也不需要用到，自然也就没有名字。
+- `++i` 被视为 `i.operator++()`，`i++` 被视为 `i.operator++(0)`。
+
+---
+
+## 特殊的运算符：`->`
+
+```cpp
+class SharedPtr {
+ public:
+  Object &operator*() const;
+  Object *operator->() const {
+    return std::addressof(this->operator*());
+  }
+};
+```
+
+- 为了让 `p->mem` 和 `(*p).mem` 等价，`operator->` 几乎总是应该这样定义。
+- 注意在本例中 `operator*` 和 `operator->` 都是 `const`：它们都允许在 `const SharedPtr` 上调用。
+
+---
+## 输入、输出运算符
+
+输入运算符需要考虑输入错误的情况：见客观题 18。
+
+```cpp
+struct Vec3 {
+  double x_, y_, z_;
+  double l2_norm_;
+};
+std::istream &operator>>(std::istream &is, Vec3 &v) {
+  is >> v.x_ >> v.y_ >> v.z_;
+  if (!is) // 如果输入发生错误，要将对象置于有效的状态。
+    v.x_ = v.y_ = v.z_ = 0;
+  v.l2_norm_ = std::sqrt(v.x_ * v.x_ + v.y_ * v.y_ + v.z_ * v.z_);
+  return is;
+}
+```
+
+---
+  

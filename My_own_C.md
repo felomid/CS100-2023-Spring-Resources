@@ -1,6 +1,7 @@
 ---
 marp: true
 math: mathjax
+color : invert
 ---
 # CS100 notes of recitation
 felomid

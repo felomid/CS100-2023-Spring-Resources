@@ -2,10 +2,10 @@
 marp: true
 math: mathjax
 theme: default
-# class: invert
+class: invert
 ---
 # Homework 6 客观题
-
+****
 ---
 ## 2
 指针相减：指向同一块连续内存的时候可以相减
