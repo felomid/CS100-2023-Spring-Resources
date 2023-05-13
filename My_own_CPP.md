@@ -1306,6 +1306,7 @@ class Derived : public Base {
 
 尽管没有显式声明，但是一个 overriding 函数仍然是一个虚函数。
 `virtual` 和 `override` 都可以被省略，但是**建议一直加上他们**.
+
 ---
 ## 虚函数
 - 对于一个多态

@@ -4,8 +4,17 @@ math: mathjax
 theme: default
 class: invert
 ---
+# Homework 5 客观题 (a checklist for C++ beginners)
+---
+## 12(错)
+
+太傻逼了，怎么可能 `sizeof` 是在运行时决定的呢？它肯定是在编译时就决定的（除非它是 VLA）
+---
+## 18（错）
+`const_cast<>` 是可以去除 `low-level const`
+---
 # Homework 6 客观题
-****
+
 ---
 ## 2
 指针相减：指向同一块连续内存的时候可以相减
