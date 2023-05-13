@@ -61,6 +61,23 @@ felomid
 - `||`：如果左边是 `true`，则右边不会求值
 ---
 # 指针
+
+---
+
+## `void *`：“指向 `void` 的指针”
+- 任何指针都可以（隐式）转换成 `void *`
+- `void *` 可以（隐式）转换成任何指针
+- 可以用 `printf("%p", ptr)` 输出一个 `void *` 类型的指针 `ptr` 的值。
+  - 如果 `ptr` 是其它类型的指针，需要先转换：`printf("%p", (void *)ptr)`
+- 不能认为 `printf("%f", ival)` 等价于 `printf("%f", (float)ival)`（试一试）
+
+在没有 C++ 那样强的静态类型系统支持下，`void *` 经常被用来表示“任意类型的指针”、“（未知类型的）内存的地址”，甚至是“任意的对象”。
+
+- `malloc` 的返回值类型就是 `void *`，`free` 的参数类型也是 `void *`。
+- `pthread_create` 允许给线程函数传任意参数，方法就是用 `void *` 转交。
+- 在 C 中，接受 `malloc` 的返回值时**不需要显式转换**。
+
+**`void *` 是 C 类型系统真正意义上的天窗**
 ---
 ## 参数传递
 ```c
@@ -77,9 +94,49 @@ int main(void) {
 参数传递实际上是用实参的值**初始化**形参。如果实参是一个变量，则相当于**拷贝**了这个变量的值。
 - 如果是指针，则是**拷贝**了指针的值。在这一层面上，指针和普通变量并无区别。
 ---
+## 函数指针
+
+- **一个子程序指针或者一个过程指针**
+  - 一个指向函数的指针
+  - 指向内存中一段可执行代码
+```cpp
+double cm_to_inches(double cm) {
+  return cm / 2.54;
+}
+
+int main() {
+  double (*func1)(double) = cm_to_inches;
+  char * (*func2)(const char *, int) = strchr;
+  printf("%f %s", func1(15.0), fun2("Wikipedia", 'p'));
+  // prints "5.905512 pedia" 
+  return 0;
+}
+```
+
+---
+## 函数指针
+
+函数指针有什么用？
+- 可以作为参数传入函数
+```cpp
+double compute_sum(double (*funcp)(double), double lo, double hi) {
+  double sum = 0.0;
+  int i;
+  for(int i = 0; i <= 100; i++) {
+    double x = i / 100.0 * (hi - lo) + lo;
+    double y = funcp(x);
+    sum += y;
+  }
+  return sum / 101.0;
+}
+// this function takes a function pointer as an argument, thus it can call the function in its scope
+```
+
+---
 ## 退化
 - 数组向指向首元素指针的隐式转换（退化）：
   - `Type [N]` 会退化为 `Type *`
+  - 但是数组名的值不能改变，不能执行 `array += 5`  `array++`
 - “二维数组”其实是“数组的数组”：
   - `Type [N][M]` 是一个 `N` 个元素的数组，每个元素都是 `Type [M]`
   - `Type [N][M]` 退化为“指向 `Type [M]` 的指针”
@@ -98,6 +155,20 @@ void fun(int a[10][N]);
 
 可以传递 `int [K][N]` 给 `fun`，其中 `K` 可以是任意值。
 - 第二维大小必须是 `N`。 `Type [10]` 和 `Type [100]` 是不同的类型，指向它们的指针之间不兼容。
+---
+## 向函数传递二维数组
+
+以下声明中，参数 `a` 分别具有什么类型？哪些可以接受一个二维数组 `int [N][M]`？
+
+1. `void fun(int a[N][M])`：指向 `int [M]` 的指针，可以
+2. `void fun(int (*a)[M])`：同 1
+3. `void fun(int (*a)[N])`：指向 `int [N]` 的指针，**不可以**
+4. `void fun(int **a)`：指向 `int *` 的指针，**不可以**
+5. `void fun(int *a[])`：同 3
+6. `void fun(int *a[N])`：同 3
+7. `void fun(int a[100][M])`：同 1
+8. `void fun(int a[N][100])`：指向 `int [100]` 的指针，当且仅当 `M==100` 时可以
+
 ---
 # 字符串
 ---
@@ -147,6 +218,23 @@ for (int i = 0; i != n; ++i)
   free(p[i]);
 free(p);
 ```
+---
+## `malloc`, `calloc` 和 `free`
+
+看标准！[`malloc`](https://en.cppreference.com/w/c/memory/malloc) [`calloc`](https://en.cppreference.com/w/c/memory/calloc) [`free`](https://en.cppreference.com/w/c/memory/free)
+
+```c
+void *malloc(size_t size);
+void *calloc(size_t num, size_t each_size);
+void free(void *ptr);
+```
+
+- `calloc` 分配的内存大小为 `num * each_size`（其实不一定，但暂时不用管）
+- `malloc` 分配**未初始化的内存**，每个元素都具有未定义的值
+  - 但你可能试来试去发现都是 `0`？这是巧合吗？
+- `calloc` 会将分配的内存的每个字节都初始化为零。
+- `free` 释放动态分配的内存。在调用 `free(ptr)` 后，`ptr` 具有**未定义的值**（dangling pointer）
+
 ---
 
 ## `malloc`, `calloc` 和 `free`
