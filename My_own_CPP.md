@@ -1,5 +1,5 @@
 ---
-marp: true
+marp: false
 math: mathjax
 theme: default
 # class: invert
@@ -323,7 +323,7 @@ Calling `std::move(x)` tells the compiler that:
 - we want to treat `x` as an **rvalue**.
 
 ---
-## `std::move``
+## `std::move`
 `std::move(x)` indicates that we want to treat `x` as an **rvalue**, which means that `x` will be *moved from*.
 
 The call to `std::move` **promises** that we do not intend to use `x` again,
