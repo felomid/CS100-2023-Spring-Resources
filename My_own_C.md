@@ -170,6 +170,19 @@ void fun(int a[10][N]);
 7. `void fun(int a[100][M])`：同 1
 8. `void fun(int a[N][100])`：指向 `int [100]` 的指针，当且仅当 `M==100` 时可以
 
+
+---
+## 基本函数重载策略
+
+1. An exact match, including the following cases:
+     - identical types
+     - match through decay of array or function type
+     - match through top-level `const` conversion
+2. **Match through adding low-level `const`** 
+3. Match through integral or floating-point promotion
+4. Match through numeric conversion
+5. Match through a class-type conversion
+
 ---
 # 字符串
 ---

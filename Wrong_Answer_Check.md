@@ -77,11 +77,10 @@ int main() {
 
 什么时候 default-constructor 是 non-trivial 的？
 - 不可以是 user-provided
-  - 如果默认构造函数后为空函数体，则是 non-trivial 的，value-initializor 会调用这个默认构造函数，这意味着永远不会零初始化（除非你人为定义了）
+  - 如果默认构造函数后为空函数体，则是 trivial 的
 - 有一个不可以 default initialize 的成员（比如 std::string）
 
-在这种情况（有 non-trivial default-constructor），两者可以理解为是一样的。
-
+在这种情况（有 non-trivial default-constructor），值初始化就会调用默认初始化，所以二者可以理解为是一样的。
 ---
 ## 8
 `new int [0]` 会不会分配内存？
