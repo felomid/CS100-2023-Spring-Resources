@@ -20,7 +20,7 @@
 
 #### IO类型间的关系
 
-​	不同类型的流之间的差异之所以能被忽略，是通过**继承关系（inheritance)**实现的。
+​	不同类型的流之间的差异之所以能被忽略，是通过**继承关系(inheritance) **实现的。
 
 <img src="E:\Per_info\课程资料\大一下\CS100\CS100-recitations-spring2023-main\r14\img\iostream_inheritance.png" alt="iostream_inheritance" style="zoom:60%;" />
 
